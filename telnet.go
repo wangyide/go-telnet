@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -120,11 +121,13 @@ func (c *conn) dial(network, address string) (Connection, error) {
 // Read the current buffer sent from the server	fprint after being processed
 // for telnet options. This blocks until data is available.
 func (c *conn) Read(b []byte) (n int, err error) {
+	var expects = []string{">", "]", "#", ":"}
+	var output = ""
 	// otherwise push the processed data
 	c.uLock.Lock()
 	defer c.uLock.Unlock()
-	ready := c.u.Len() > 0
-	for !ready {
+	// ready := c.u.Len() > 0
+	for i := 0; i < 60; i++ {
 		// push connection errors upstream, only after buffer has been sent
 		c.eLock.Lock()
 		if c.lastError != nil {
@@ -133,9 +136,15 @@ func (c *conn) Read(b []byte) (n int, err error) {
 		c.eLock.Unlock()
 
 		c.uLock.Unlock()
-		time.Sleep(time.Duration(20) * time.Millisecond)
+		time.Sleep(time.Duration(100) * time.Millisecond)
 		c.uLock.Lock()
-		ready = c.u.Len() > 0
+		for _, expect := range expects {
+			if strings.Contains(output, expect) {
+				// return output
+				return c.u.Read(b)
+			}
+		}
+
 	}
 	return c.u.Read(b)
 }

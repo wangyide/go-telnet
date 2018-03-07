@@ -13,3 +13,27 @@ It currently refuses and/or disables all options in a sane manner, except for bi
 Further work needs to be done to implement other telnet options. This is planned, however I have little motivation to do so at the moment.
 
 Current version requires Go1.8 to utilize the os specific writev functions.
+
+### example
+
+```go
+package main
+
+import ssh "github.com/wangyide/go-telnet"
+import "fmt"
+
+func main() {
+    user := "admin"
+    password := "yourpasswd"
+    ipPort := "ip:23"
+
+        cmds := make([]string, 0)
+    cmds = append(cmds, "dis cu")
+    cmds = append(cmds, "dir")
+    str,_:=ssh.RunCommands(user, password, ipPort, cmds...)
+    fmt.Println("===")
+    fmt.Println(str)
+    fmt.Println("===")
+}
+
+```
